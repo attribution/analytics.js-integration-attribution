@@ -1,7 +1,6 @@
 {
-  "name": "analytics.js-integration-segmentio",
-  "description": "The Segmentio analytics.js integration.",
-  "author": "Segment <friends@segment.com>",
+  "name": "analytics.js-integration-attribution",
+  "description": "The Attribution analytics.js integration.",
   "license": "MIT",
   "main": "lib/index.js",
   "scripts": {
@@ -12,13 +11,9 @@
     "npm": ">=2.7.0"
   },
   "repository": {
-    "url": "https://github.com/segment-integrations/analytics.js-integration-segmentio.git",
+    "url": "https://github.com/attribution/analytics.js-integration-attribution.git",
     "type": "git"
   },
-  "bugs": {
-    "url": "https://github.com/segment-integrations/analytics.js-integration-segmentio/issues"
-  },
-  "homepage": "https://segment.com/docs/integrations/segmentio/",
   "dependencies": {},
   "devDependencies": {
     "duo": "0.12.x",

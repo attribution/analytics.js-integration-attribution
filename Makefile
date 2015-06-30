@@ -78,16 +78,6 @@ test-browser: node_modules build.js
 	@$(DUOT) browser --commands "make build" $(TESTS_DIR)
 .PHONY: test-browser
 
-# Test in Sauce Labs. Note that you must set the SAUCE_USERNAME and
-# SAUCE_ACCESS_KEY environment variables using your Sauce Labs credentials.
-test-sauce: node_modules build.js
-	@$(DUOT) saucelabs $(TESTS_DIR) \
-		--name analytics.js-integrations \
-		--browsers $(BROWSER) \
-		--user $(SAUCE_USERNAME) \
-		--key $(SAUCE_ACCESS_KEY)
-.PHONY: test-sauce
-
 # Test shortcut.
 test: lint test-phantomjs
 .PHONY: test

@@ -1,6 +1,6 @@
 {
-  "name": "analytics.js-integration-segmentio",
-  "repo": "segment-integrations/analytics.js-integration-segmentio",
+  "name": "analytics.js-integration-attribution",
+  "repo": "segment-integrations/analytics.js-integration-attribution",
   "description": "The Segmentio analytics.js integration.",
   "version": "1.0.1",
   "license": "MIT",
