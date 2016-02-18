@@ -17,7 +17,8 @@
     "segmentio/top-domain": "1.0.0",
     "segmentio/utm-params": "1.0.2",
     "yields/send-json": "1.1.1",
-    "yields/store": "1.0.2"
+    "yields/store": "1.0.2",
+    "component/has-cors": "*"
   },
   "development": {
     "component/assert": "0.5.0",
