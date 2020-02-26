@@ -22,7 +22,7 @@ var lolex = require('lolex');
 // this hackery
 var isPhantomJS = /PhantomJS/.test(window.navigator.userAgent);
 
-describe('Segment.io', function() {
+describe('Attribution', function() {
   var segment;
   var analytics;
   var options;
@@ -35,7 +35,9 @@ describe('Segment.io', function() {
   });
 
   beforeEach(function() {
-    options = { apiKey: 'oq0vdlg7yi' };
+    var hostname = location.hostname;
+    var port = location.port;
+    options = { project: 'oq0vdlg7yi', apiHost: hostname + ':' + port };
     protocol.reset();
     analytics = new Analytics();
     segment = new Segment(options);
@@ -63,8 +65,6 @@ describe('Segment.io', function() {
   function resetCookies() {
     store('s:context.referrer', null);
     cookie('s:context.referrer', null, { maxage: -1, path: '/' });
-    store('segment_amp_id', null);
-    cookie('segment_amp_id', null, { maxage: -1, path: '/' });
     store('seg_xid', null);
     cookie('seg_xid', null, { maxage: -1, path: '/' });
     store('seg_xid_fd', null);
@@ -76,8 +76,8 @@ describe('Segment.io', function() {
   it('should have the right settings', function() {
     analytics.compare(
       Segment,
-      integration('Segment.io')
-        .option('apiKey', '')
+      integration('Attribution')
+        .option('project', '')
         .option('retryQueue', true)
     );
   });
@@ -86,9 +86,9 @@ describe('Segment.io', function() {
     var Analytics = analytics.constructor;
     var ajs = new Analytics();
     ajs.use(Segment);
-    ajs.initialize({ 'Segment.io': options });
+    ajs.initialize({ 'Attribution': options });
     ajs.ready(function() {
-      var segment = ajs._integrations['Segment.io'];
+      var segment = ajs._integrations['Attribution'];
       segment.ontrack = sinon.spy();
       ajs.track('event', {}, { All: false });
       assert(segment.ontrack.calledOnce);
@@ -179,9 +179,9 @@ describe('Segment.io', function() {
         analytics.assert(object.options == null);
       });
 
-      it('should add .writeKey', function() {
+      it('should add .projectId', function() {
         segment.normalize(object);
-        analytics.assert(object.writeKey === segment.options.apiKey);
+        analytics.assert(object.projectId === segment.options.project);
       });
 
       it('should add .library', function() {
@@ -316,103 +316,6 @@ describe('Segment.io', function() {
         Segment.global = window;
       });
 
-      it('should add .amp.id from store', function() {
-        segment.cookie('segment_amp_id', 'some-amp-id');
-        segment.normalize(object);
-        analytics.assert(object);
-        analytics.assert(object.context);
-        analytics.assert(object.context.amp);
-        analytics.assert(object.context.amp.id === 'some-amp-id');
-      });
-
-      it('should not add .amp if theres no segment_amp_id', function() {
-        segment.normalize(object);
-        analytics.assert(object);
-        analytics.assert(object.context);
-        analytics.assert(!object.context.amp);
-      });
-
-      it('should set xid from cookie, and context.traits is not defined', function() {
-        segment.cookie('seg_xid', 'test_id');
-        segment.options.crossDomainIdServers = [
-          'userdata.example1.com',
-          'xid.domain2.com',
-          'localhost'
-        ];
-        segment.options.saveCrossDomainIdInLocalStorage = false;
-
-        segment.normalize(object);
-        assert.equal(object.context.traits.crossDomainId, 'test_id');
-      });
-
-      it('should set xid from cookie, and context.traits is defined', function() {
-        segment.cookie('seg_xid', 'test_id');
-        segment.options.crossDomainIdServers = [
-          'userdata.example1.com',
-          'xid.domain2.com',
-          'localhost'
-        ];
-        segment.options.saveCrossDomainIdInLocalStorage = false;
-
-        var msg = { context: { traits: { email: 'prateek@segment.com' } } };
-        segment.normalize(msg);
-        assert.equal(msg.context.traits.crossDomainId, 'test_id');
-      });
-
-      it('should set xid from localStorage, and context.traits is not defined', function() {
-        window.localStorage.setItem('seg_xid', 'test_id');
-        segment.options.crossDomainIdServers = [
-          'userdata.example1.com',
-          'xid.domain2.com',
-          'localhost'
-        ];
-        segment.options.saveCrossDomainIdInLocalStorage = true;
-
-        segment.normalize(object);
-        assert.equal(object.context.traits.crossDomainId, 'test_id');
-      });
-
-      it('should set xid from localStorage, is enabled, and context.traits is defined', function() {
-        window.localStorage.setItem('seg_xid', 'test_id');
-        segment.options.crossDomainIdServers = [
-          'userdata.example1.com',
-          'xid.domain2.com',
-          'localhost'
-        ];
-        segment.options.saveCrossDomainIdInLocalStorage = true;
-
-        var msg = { context: { traits: { email: 'prateek@segment.com' } } };
-        segment.normalize(msg);
-        assert.equal(msg.context.traits.crossDomainId, 'test_id');
-      });
-
-      it('should not set xid if available, and is disabled', function() {
-        segment.cookie('seg_xid', 'test_id');
-        segment.options.crossDomainIdServers = [];
-
-        segment.normalize(object);
-
-        // context.traits will not be set, which implicitly verifies that
-        // context.traits.crossDomainId is not set.
-        assert.equal(object.context.traits, undefined);
-      });
-
-      it('should not set xid if not available, and context.traits is not defined', function() {
-        segment.cookie('seg_xid', null);
-        segment.normalize(object);
-        // context.traits will not be set, which implicitly verifies that
-        // context.traits.crossDomainId is not set.
-        assert.equal(object.context.traits, undefined);
-      });
-
-      it('should not set xid if not available and context.traits is defined', function() {
-        segment.cookie('seg_xid', null);
-
-        var msg = { context: { traits: { email: 'prateek@segment.com' } } };
-        segment.normalize(msg);
-        assert.equal(msg.context.traits.crossDomainId, undefined);
-      });
-
       describe('failed initializations', function() {
         it('should add failedInitializations as part of _metadata object if this.analytics.failedInitilizations is not empty', function() {
           var spy = sinon.spy(segment, 'normalize');
@@ -444,32 +347,6 @@ describe('Segment.io', function() {
           ajs.use(integration('other'));
           ajs.add(segment);
           ajs.initialize({ other: {} });
-        });
-
-        it('should add a list of bundled integrations when `addBundledMetadata` is set', function() {
-          segment.options.addBundledMetadata = true;
-          segment.normalize(object);
-
-          assert(object);
-          assert(object._metadata);
-          assert.deepEqual(object._metadata.bundled, ['Segment.io', 'other']);
-        });
-
-        it('should add a list of unbundled integrations when `addBundledMetadata` and `unbundledIntegrations` are set', function() {
-          segment.options.addBundledMetadata = true;
-          segment.options.unbundledIntegrations = ['other2'];
-          segment.normalize(object);
-
-          assert(object);
-          assert(object._metadata);
-          assert.deepEqual(object._metadata.unbundled, ['other2']);
-        });
-
-        it('should not add _metadata when `addBundledMetadata` is unset', function() {
-          segment.normalize(object);
-
-          assert(object);
-          assert(!object._metadata);
         });
       });
 
@@ -535,17 +412,6 @@ describe('Segment.io', function() {
         describe('#identify', function() {
           beforeEach(function() {
             analytics.stub(segment, 'enqueue');
-          });
-
-          it('identify should not ultimately call getCachedCrossDomainId if crossDomainAnalytics is not enabled', function() {
-            segment.options.crossDomainIdServers = [];
-            var getCachedCrossDomainIdSpy = sinon.spy(
-              segment,
-              'getCachedCrossDomainId'
-            );
-            segment.normalize({});
-            sinon.assert.notCalled(getCachedCrossDomainIdSpy);
-            segment.getCachedCrossDomainId.restore();
           });
 
           it('should enqueue an id and traits', function() {
@@ -651,7 +517,7 @@ describe('Segment.io', function() {
           });
 
           it(
-            'should use https: protocol when http:',
+            'should use http: protocol when http:',
             sinon.test(function() {
               var spy = sinon.spy();
               xhr.onCreate = spy;
@@ -661,7 +527,7 @@ describe('Segment.io', function() {
 
               assert(spy.calledOnce);
               var req = spy.getCall(0).args[0];
-              assert.strictEqual(req.url, 'https://api.segment.io/v1/i');
+              assert.include(req.url, 'http://');
             })
           );
 
@@ -676,7 +542,7 @@ describe('Segment.io', function() {
 
               assert(spy.calledOnce);
               var req = spy.getCall(0).args[0];
-              assert.strictEqual(req.url, 'https://api.segment.io/v1/i');
+              assert.include(req.url, 'https://');
             })
           );
 
@@ -691,7 +557,7 @@ describe('Segment.io', function() {
 
               assert(spy.calledOnce);
               var req = spy.getCall(0).args[0];
-              assert.strictEqual(req.url, 'https://api.segment.io/v1/i');
+              assert.include(req.url, 'https://');
             })
           );
 
@@ -706,22 +572,7 @@ describe('Segment.io', function() {
 
               assert(spy.calledOnce);
               var req = spy.getCall(0).args[0];
-              assert.strictEqual(req.url, 'https://api.segment.io/v1/i');
-            })
-          );
-
-          it(
-            'should enqueue to `api.segment.io/v1` by default',
-            sinon.test(function() {
-              var spy = sinon.spy();
-              xhr.onCreate = spy;
-
-              protocol('https:');
-              segment.enqueue('/i', { userId: 'id' });
-
-              assert(spy.calledOnce);
-              var req = spy.getCall(0).args[0];
-              assert.strictEqual(req.url, 'https://api.segment.io/v1/i');
+              assert.include(req.url, 'https://');
             })
           );
 
@@ -738,7 +589,7 @@ describe('Segment.io', function() {
 
               assert(spy.calledOnce);
               var req = spy.getCall(0).args[0];
-              assert.strictEqual(req.url, 'https://api.example.com/i');
+              assert.include(req.url, 'https://');
             })
           );
 
@@ -1000,452 +851,6 @@ describe('Segment.io', function() {
             segment.cookie('foo', 'bar');
             analytics.assert(segment.cookie('foo') === 'bar');
             Segment.global = window;
-          });
-        });
-
-        describe('#crossDomainId', function() {
-          var server;
-
-          beforeEach(function() {
-            server = sinon.fakeServer.create();
-            segment.options.crossDomainIdServers = [
-              'userdata.example1.com',
-              'xid.domain2.com',
-              'localhost'
-            ];
-            analytics.stub(segment, 'onidentify');
-          });
-
-          afterEach(function() {
-            server.restore();
-          });
-
-          it('should not crash with invalid config', function() {
-            segment.options.crossDomainIdServers = undefined;
-
-            var res = null;
-            var err = null;
-            segment.retrieveCrossDomainId(function(error, response) {
-              res = response;
-              err = error;
-            });
-
-            analytics.assert(!res);
-            analytics.assert(err === 'crossDomainId not enabled');
-          });
-
-          it('should use cached cross domain identifier from LS when saveCrossDomainIdInLocalStorage is true', function() {
-            segment.options.crossDomainIdServers = ['localhost'];
-            segment.options.saveCrossDomainIdInLocalStorage = true;
-
-            store('seg_xid', 'test_xid_cache_ls');
-
-            var res = null;
-            var err = null;
-            segment.retrieveCrossDomainId(function(error, response) {
-              res = response;
-              err = error;
-            });
-
-            assert.isNull(err);
-            assert.deepEqual(res, {
-              crossDomainId: 'test_xid_cache_ls'
-            });
-          });
-
-          it('should use cached cross domain identifier from cookies when saveCrossDomainIdInLocalStorage is false', function() {
-            segment.options.crossDomainIdServers = ['localhost'];
-            segment.options.saveCrossDomainIdInLocalStorage = false;
-
-            segment.cookie('seg_xid', 'test_xid_cache_cookie');
-
-            var res = null;
-            var err = null;
-            segment.retrieveCrossDomainId(function(error, response) {
-              res = response;
-              err = error;
-            });
-
-            assert.isNull(err);
-            assert.deepEqual(res, {
-              crossDomainId: 'test_xid_cache_cookie'
-            });
-          });
-
-          describe('getCachedCrossDomainId', function() {
-            it('should return identifiers from localstorage when saveCrossDomainIdInLocalStorage is true', function() {
-              store('seg_xid', 'test_xid_cache_ls');
-              segment.cookie('seg_xid', 'test_xid_cache_cookie');
-
-              segment.options.saveCrossDomainIdInLocalStorage = true;
-
-              assert.equal(
-                segment.getCachedCrossDomainId(),
-                'test_xid_cache_ls'
-              );
-            });
-
-            it('should return identifiers from localstorage when saveCrossDomainIdInLocalStorage is true', function() {
-              store('seg_xid', 'test_xid_cache_ls');
-              segment.cookie('seg_xid', 'test_xid_cache_cookie');
-
-              segment.options.saveCrossDomainIdInLocalStorage = false;
-
-              assert.equal(
-                segment.getCachedCrossDomainId(),
-                'test_xid_cache_cookie'
-              );
-            });
-          });
-
-          var cases = {
-            'saveCrossDomainIdInLocalStorage true': true,
-            'saveCrossDomainIdInLocalStorage false': false
-          };
-
-          for (var scenario in cases) {
-            if (!cases.hasOwnProperty(scenario)) {
-              continue;
-            }
-
-            describe('with ' + scenario, function() {
-              it('should generate xid locally if there is only one (current hostname) server', function() {
-                segment.options.crossDomainIdServers = ['localhost'];
-                segment.options.saveCrossDomainIdInLocalStorage =
-                  cases[scenario];
-
-                var res = null;
-                segment.retrieveCrossDomainId(function(err, response) {
-                  res = response;
-                });
-
-                var identify = segment.onidentify.args[0];
-                var crossDomainId = identify[0].traits().crossDomainId;
-                analytics.assert(crossDomainId);
-
-                analytics.assert(res.crossDomainId === crossDomainId);
-                analytics.assert(res.fromDomain === 'localhost');
-
-                assert.equal(segment.getCachedCrossDomainId(), crossDomainId);
-              });
-
-              it('should obtain crossDomainId', function() {
-                server.respondWith(
-                  'GET',
-                  'https://xid.domain2.com/v1/id/' + segment.options.apiKey,
-                  [
-                    200,
-                    { 'Content-Type': 'application/json' },
-                    '{ "id": "xdomain-id-1" }'
-                  ]
-                );
-                if (segment.options.saveCrossDomainIdInLocalStorage) {
-                  server.respondWith(
-                    'GET',
-                    'https://localhost/v1/saveId?writeKey=' +
-                    segment.options.apiKey +
-                    '&xid=xdomain-id-1',
-                    [200, { 'Content-Type': 'text/plan' }, 'OK']
-                  );
-                }
-                server.respondImmediately = true;
-
-                var res = null;
-                segment.retrieveCrossDomainId(function(err, response) {
-                  res = response;
-                });
-
-                var identify = segment.onidentify.args[0];
-                analytics.assert(
-                  identify[0].traits().crossDomainId === 'xdomain-id-1'
-                );
-
-                analytics.assert(res.crossDomainId === 'xdomain-id-1');
-                analytics.assert(res.fromDomain === 'xid.domain2.com');
-
-                assert.equal(segment.getCachedCrossDomainId(), 'xdomain-id-1');
-              });
-
-              it('should generate crossDomainId if no server has it', function() {
-                server.respondWith(
-                  'GET',
-                  'https://xid.domain2.com/v1/id/' + segment.options.apiKey,
-                  [
-                    200,
-                    { 'Content-Type': 'application/json' },
-                    '{ "id": null }'
-                  ]
-                );
-                server.respondWith(
-                  'GET',
-                  'https://userdata.example1.com/v1/id/' +
-                  segment.options.apiKey,
-                  [
-                    200,
-                    { 'Content-Type': 'application/json' },
-                    '{ "id": null }'
-                  ]
-                );
-                if (segment.options.saveCrossDomainIdInLocalStorage) {
-                  server.respondWith('GET', /https:\/\/localhost\/v1\/saveId/, [
-                    200,
-                    { 'Content-Type': 'text/plan' },
-                    'OK'
-                  ]);
-                }
-                server.respondImmediately = true;
-
-                var res = null;
-                segment.retrieveCrossDomainId(function(err, response) {
-                  res = response;
-                });
-
-                var identify = segment.onidentify.args[0];
-                var crossDomainId = identify[0].traits().crossDomainId;
-                analytics.assert(crossDomainId);
-
-                analytics.assert(res.crossDomainId === crossDomainId);
-                analytics.assert(res.fromDomain === 'localhost');
-
-                assert.equal(segment.getCachedCrossDomainId(), crossDomainId);
-              });
-
-              it('should bail if all servers error', function() {
-                var err = null;
-                var res = null;
-                segment.retrieveCrossDomainId(function(error, response) {
-                  err = error;
-                  res = response;
-                });
-
-                server.respondWith(
-                  'GET',
-                  'https://xid.domain2.com/v1/id/' + segment.options.apiKey,
-                  [500, { 'Content-Type': 'application/json' }, '']
-                );
-                server.respondWith(
-                  'GET',
-                  'https://userdata.example1.com/v1/id/' +
-                  segment.options.apiKey,
-                  [500, { 'Content-Type': 'application/json' }, '']
-                );
-                server.respond();
-
-                var identify = segment.onidentify.args[0];
-                analytics.assert(!identify);
-                analytics.assert(!res);
-                analytics.assert(err === 'Internal Server Error');
-
-                assert.equal(segment.getCachedCrossDomainId(), null);
-              });
-
-              it('should bail if some servers fail and others have no xid', function() {
-                var err = null;
-                var res = null;
-                segment.retrieveCrossDomainId(function(error, response) {
-                  err = error;
-                  res = response;
-                });
-
-                server.respondWith(
-                  'GET',
-                  'https://xid.domain2.com/v1/id/' + segment.options.apiKey,
-                  [400, { 'Content-Type': 'application/json' }, '']
-                );
-                server.respondWith(
-                  'GET',
-                  'https://userdata.example1.com/v1/id/' +
-                  segment.options.apiKey,
-                  [
-                    200,
-                    { 'Content-Type': 'application/json' },
-                    '{ "id": null }'
-                  ]
-                );
-                server.respond();
-
-                var identify = segment.onidentify.args[0];
-                analytics.assert(!identify);
-                analytics.assert(!res);
-                analytics.assert(err === 'Bad Request');
-
-                assert.equal(segment.getCachedCrossDomainId(), null);
-              });
-
-              it('should succeed even if one server fails', function() {
-                server.respondWith(
-                  'GET',
-                  'https://xid.domain2.com/v1/id/' + segment.options.apiKey,
-                  [500, { 'Content-Type': 'application/json' }, '']
-                );
-                server.respondWith(
-                  'GET',
-                  'https://userdata.example1.com/v1/id/' +
-                  segment.options.apiKey,
-                  [
-                    200,
-                    { 'Content-Type': 'application/json' },
-                    '{ "id": "xidxid" }'
-                  ]
-                );
-                if (segment.options.saveCrossDomainIdInLocalStorage) {
-                  server.respondWith(
-                    'GET',
-                    'https://localhost/v1/saveId?writeKey=' +
-                    segment.options.apiKey +
-                    '&xid=xidxid',
-                    [200, { 'Content-Type': 'text/plan' }, 'OK']
-                  );
-                }
-                server.respondImmediately = true;
-
-                var err = null;
-                var res = null;
-                segment.retrieveCrossDomainId(function(error, response) {
-                  err = error;
-                  res = response;
-                });
-
-                var identify = segment.onidentify.args[0];
-                analytics.assert(
-                  identify[0].traits().crossDomainId === 'xidxid'
-                );
-
-                analytics.assert(res.crossDomainId === 'xidxid');
-                analytics.assert(res.fromDomain === 'userdata.example1.com');
-                analytics.assert(!err);
-
-                assert.equal(segment.getCachedCrossDomainId(), 'xidxid');
-              });
-            });
-          }
-
-          describe('isCrossDomainAnalyticsEnabled', function() {
-            it('should return false when crossDomainIdServers is undefined', function() {
-              segment.options.crossDomainIdServers = undefined;
-
-              assert.equal(segment.isCrossDomainAnalyticsEnabled(), false);
-            });
-
-            it('should return false when crossDomainIdServers is empty', function() {
-              segment.options.crossDomainIdServers = [];
-
-              assert.equal(segment.isCrossDomainAnalyticsEnabled(), false);
-            });
-
-            it('should return true when crossDomainIdServers is set', function() {
-              segment.options.crossDomainIdServers = [
-                'userdata.example1.com',
-                'xid.domain2.com',
-                'localhost'
-              ];
-
-              assert.equal(segment.isCrossDomainAnalyticsEnabled(), true);
-            });
-
-            it('should return true even when crossDomainIdServers is set with 1 server', function() {
-              segment.options.crossDomainIdServers = ['localhost'];
-
-              assert.equal(segment.isCrossDomainAnalyticsEnabled(), true);
-            });
-          });
-
-          describe('deleteCrossDomainId', function() {
-            it('should not delete cross domain identifiers by default', function() {
-              segment.cookie('seg_xid', 'test_xid');
-              segment.cookie('seg_xid_ts', 'test_xid_ts');
-              segment.cookie('seg_xid_fd', 'test_xid_fd');
-              analytics.identify({
-                crossDomainId: 'test_xid'
-              });
-
-              segment.deleteCrossDomainIdIfNeeded();
-
-              assert.equal(segment.cookie('seg_xid'), 'test_xid');
-              assert.equal(segment.cookie('seg_xid_ts'), 'test_xid_ts');
-              assert.equal(segment.cookie('seg_xid_fd'), 'test_xid_fd');
-              assert.equal(analytics.user().traits().crossDomainId, 'test_xid');
-            });
-
-            it('should do not delete cross domain identifiers if disabled', function() {
-              segment.options.deleteCrossDomainId = false;
-
-              segment.cookie('seg_xid', 'test_xid');
-              segment.cookie('seg_xid_ts', 'test_xid_ts');
-              segment.cookie('seg_xid_fd', 'test_xid_fd');
-              analytics.identify({
-                crossDomainId: 'test_xid'
-              });
-
-              segment.deleteCrossDomainIdIfNeeded();
-
-              assert.equal(segment.cookie('seg_xid'), 'test_xid');
-              assert.equal(segment.cookie('seg_xid_ts'), 'test_xid_ts');
-              assert.equal(segment.cookie('seg_xid_fd'), 'test_xid_fd');
-              assert.equal(analytics.user().traits().crossDomainId, 'test_xid');
-            });
-
-            it('should delete cross domain identifiers if enabled', function() {
-              segment.options.deleteCrossDomainId = true;
-
-              segment.cookie('seg_xid', 'test_xid');
-              segment.cookie('seg_xid_ts', 'test_xid_ts');
-              segment.cookie('seg_xid_fd', 'test_xid_fd');
-              store('seg_xid', 'test_xid');
-
-              analytics.identify({
-                crossDomainId: 'test_xid'
-              });
-
-              segment.deleteCrossDomainIdIfNeeded();
-
-              assert.equal(segment.cookie('seg_xid'), null);
-              assert.equal(segment.cookie('seg_xid_ts'), null);
-              assert.equal(segment.cookie('seg_xid_fd'), null);
-              assert.equal(store('seg_xid'), null);
-              assert.equal(analytics.user().traits().crossDomainId, null);
-            });
-
-            it('should delete localStorage trait even if only traits exists', function() {
-              segment.options.deleteCrossDomainId = true;
-
-              analytics.identify({
-                crossDomainId: 'test_xid'
-              });
-
-              segment.deleteCrossDomainIdIfNeeded();
-
-              assert.equal(analytics.user().traits().crossDomainId, null);
-            });
-
-            it('should delete xid cookie even if only cookie exists', function() {
-              segment.options.deleteCrossDomainId = true;
-
-              segment.cookie('seg_xid', 'test_xid');
-
-              segment.deleteCrossDomainIdIfNeeded();
-
-              assert.equal(segment.cookie('seg_xid'), null);
-              assert.equal(segment.cookie('seg_xid_ts'), null);
-              assert.equal(segment.cookie('seg_xid_fd'), null);
-            });
-
-            it('should not delete any other traits if enabled', function() {
-              segment.options.deleteCrossDomainId = true;
-
-              analytics.identify({
-                crossDomainId: 'test_xid',
-                name: 'Prateek',
-                age: 26
-              });
-
-              segment.deleteCrossDomainIdIfNeeded();
-
-              assert.deepEqual(analytics.user().traits(), {
-                name: 'Prateek',
-                age: 26
-              });
-            });
           });
         });
       });
