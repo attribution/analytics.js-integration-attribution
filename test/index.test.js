@@ -134,6 +134,18 @@ describe('Attribution', function() {
         analytics.assert(object.anonymousId === 'anon-id');
       });
 
+      it('should add .anonymousId from url', function() {
+        Segment.global = { navigator: {}, location: {} };
+        Segment.global.location.search =
+          '?utm_source=source&utm_medium=medium&utm_term=term&utm_content=content&utm_campaign=name&anonymous_id=anon-id-from-url';
+        Segment.global.location.hostname = 'localhost';
+        segment.normalize(object);
+        analytics.assert(object);
+        analytics.assert(object.anonymousId === 'anon-id-from-url');
+        console.log(object)
+        Segment.global = window;
+      });
+
       it('should add .sentAt', function() {
         segment.normalize(object);
         analytics.assert(object.sentAt);
