@@ -26,5 +26,8 @@
         "mocha": true
       }
     }
-  ]
+  ],
+  "env": {
+    "es6": true
+  }
 }
