@@ -151,13 +151,6 @@
   resolved "https://registry.yarnpkg.com/@ndhoule/rest/-/rest-2.0.0.tgz#0346b02a964a513ed2ba24d164f01d34f2107a0f"
   integrity sha1-A0awKpZKUT7SuiTRZPAdNPIQeg8=
 
-"@segment/ad-params@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@segment/ad-params/-/ad-params-1.0.0.tgz#e02ded70a7f8db952af03c21208f47201b86bc95"
-  integrity sha1-4C3tcKf425Uq8DwhII9HIBuGvJU=
-  dependencies:
-    component-querystring "^2.0.0"
-
 "@segment/analytics.js-core@4.1.11":
   version "4.1.11"
   resolved "https://registry.yarnpkg.com/@segment/analytics.js-core/-/analytics.js-core-4.1.11.tgz#444ba19972716fe652acf6c35246a987f66c8d84"
@@ -427,14 +420,6 @@
   dependencies:
     component-cookie "^1.1.5"
     component-url "^0.2.1"
-
-"@segment/utm-params@^2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@segment/utm-params/-/utm-params-2.0.0.tgz#fea3c8a92bfba0d69e861fb3b26d7d882f139334"
-  integrity sha1-/qPIqSv7oNaehh+zsm19iC8TkzQ=
-  dependencies:
-    "@ndhoule/foldl" "^2.0.1"
-    component-querystring "^2.0.0"
 
 "@sindresorhus/is@^0.7.0":
   version "0.7.0"
@@ -1445,14 +1430,6 @@ component-props@*:
   resolved "https://registry.yarnpkg.com/component-props/-/component-props-1.1.1.tgz#f9b7df9b9927b6e6d97c9bd272aa867670f34944"
   integrity sha1-+bffm5kntubZfJvScqqGdnDzSUQ=
 
-component-querystring@^2.0.0:
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/component-querystring/-/component-querystring-2.0.1.tgz#27a2c6c332947e7995f65fc166aaac354cb4c8c5"
-  integrity sha512-Dmf1X9qJVo47r7cCqiPNmA7sGOXupQilH5R4K5Kbud5amblOMd6xr5+YuXZcxcNxoUKPmql6x+urydT6Zuo5+g==
-  dependencies:
-    component-type "1.1.0"
-    trim "1.0.0"
-
 component-type@*, component-type@^1.2.0, component-type@^1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/component-type/-/component-type-1.2.1.tgz#8a47901700238e4fc32269771230226f24b415a9"
@@ -1462,11 +1439,6 @@ component-type@1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/component-type/-/component-type-1.0.0.tgz#1ed8812e32dd65099d433570757f111ea3d3d871"
   integrity sha1-HtiBLjLdZQmdQzVwdX8RHqPT2HE=
-
-component-type@1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/component-type/-/component-type-1.1.0.tgz#95b666aad53e5c8d1f2be135c45b5d499197c0c5"
-  integrity sha1-lbZmqtU+XI0fK+E1xFtdSZGXwMU=
 
 component-url@^0.2.1:
   version "0.2.1"

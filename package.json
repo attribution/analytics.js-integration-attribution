@@ -1,7 +1,7 @@
 {
   "name": "@attribution/analytics.js-integration-attribution",
   "description": "The Attribution analytics.js integration.",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "keywords": [
     "analytics.js",
     "analytics.js-integration",
@@ -29,7 +29,6 @@
     "@segment/top-domain": "^3.0.1",
     "component-clone": "^0.2.2",
     "component-cookie": "^1.1.5",
-    "component-querystring": "^2.0.1",
     "component-type": "^1.2.1",
     "json3": "^3.3.2",
     "uuid": "^8.3.2",
